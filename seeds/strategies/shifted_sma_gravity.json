@@ -1,0 +1,45 @@
+{
+  "id": "shifted_sma_gravity",
+  "name": "Shifted SMA Gravity Tunnel",
+  "version": "1.0",
+  "status": "draft",
+  "primary_set": 2,
+  "explanation": "Forward-shifted SMA(4) High/Low tunnel on HTF supports = macro mass G (full body must clear both rails). Anchor tunnel SMA(4)+2 = micro phase velocity; anchor CCI100 = inertia.",
+  "sensors": [
+    {
+      "family": "Envelopes",
+      "period": 4,
+      "shift": 4,
+      "slot": "supports",
+      "role": "force"
+    },
+    {
+      "family": "Envelopes",
+      "period": 4,
+      "shift": 2,
+      "slot": "anchor",
+      "role": "velocity"
+    },
+    {
+      "family": "CCI",
+      "period": 100,
+      "slot": "anchor",
+      "role": "inertia"
+    },
+    {
+      "family": "ADX",
+      "period": 14,
+      "slot": "anchor",
+      "role": "regime_gate"
+    }
+  ],
+  "principle_ids": [
+    "forward_shift_purpose",
+    "dual_period_tension",
+    "velocity_invalid_without_force"
+  ],
+  "evidence": [
+    "wiki: shifted-sma-envelope",
+    "wiki: gravity-framework"
+  ]
+}

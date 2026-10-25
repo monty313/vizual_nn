@@ -1,0 +1,48 @@
+{
+  "id": "dual_rsi_slingshot",
+  "name": "Dual RSI Slingshot Pullback",
+  "version": "1.0",
+  "status": "draft",
+  "primary_set": 2,
+  "explanation": "RSI34 on supports = force; anchor RSI50 = inertia, RSI14 = velocity; GrowRich-style StdDev clock flags shock.",
+  "sensors": [
+    {
+      "family": "RSI",
+      "period": 34,
+      "slot": "supports",
+      "role": "force"
+    },
+    {
+      "family": "RSI",
+      "period": 50,
+      "slot": "anchor",
+      "role": "inertia"
+    },
+    {
+      "family": "RSI",
+      "period": 14,
+      "slot": "anchor",
+      "role": "velocity"
+    },
+    {
+      "family": "StdDev",
+      "period": 10,
+      "slot": "anchor",
+      "role": "expansion"
+    },
+    {
+      "family": "ADX",
+      "period": 14,
+      "slot": "anchor",
+      "role": "regime_gate"
+    }
+  ],
+  "principle_ids": [
+    "dual_period_tension",
+    "speed_vs_weight"
+  ],
+  "evidence": [
+    "project file: Dual RSI Slingshot Pullback.docx (title)",
+    "007_JARVIS GrowRich dual StdDev clocks"
+  ]
+}

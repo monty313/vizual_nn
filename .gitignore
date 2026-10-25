@@ -1,0 +1,10 @@
+.env
+data/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+doctrine/*
+!doctrine/README.md
+.DS_Store

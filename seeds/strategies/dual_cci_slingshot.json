@@ -1,0 +1,43 @@
+{
+  "id": "dual_cci_slingshot",
+  "name": "Dual CCI Zero-Line Slingshot",
+  "version": "1.0",
+  "status": "active",
+  "primary_set": 2,
+  "explanation": "HTF CCI100 on both supports gives tide. Anchor CCI100 = inertia, CCI30 = velocity. Load when inertia holds with tide and velocity dips against it; fire when velocity resumes with tide inside the release window. ADX gates chop.",
+  "sensors": [
+    {
+      "family": "CCI",
+      "period": 100,
+      "slot": "supports",
+      "role": "force"
+    },
+    {
+      "family": "CCI",
+      "period": 100,
+      "slot": "anchor",
+      "role": "inertia"
+    },
+    {
+      "family": "CCI",
+      "period": 30,
+      "slot": "anchor",
+      "role": "velocity"
+    },
+    {
+      "family": "ADX",
+      "period": 14,
+      "slot": "anchor",
+      "role": "regime_gate"
+    }
+  ],
+  "principle_ids": [
+    "dual_period_tension",
+    "ltf_never_votes_side",
+    "wait_is_skill"
+  ],
+  "evidence": [
+    "kag_mark_doctrine/seed_triples.jsonl (CCI30 velocity, CCI100 inertia)",
+    "wiki: dual-period-isolation"
+  ]
+}

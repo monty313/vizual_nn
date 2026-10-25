@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vizual NN — Strategy Evolution Lab</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div>
+      <div class="brand-name">VIZUAL NN</div>
+      <div class="brand-sub">Strategy Evolution Lab · Fable 5.1</div>
+    </div>
+  </div>
+
+  <div class="tb-group">
+    <div class="seg" id="sourceSeg" role="tablist" aria-label="Market source">
+      <button data-src="synthetic" class="on">Synthetic</button>
+      <button data-src="alpaca">Alpaca</button>
+    </div>
+    <input id="symbol" class="inp sym" value="SPY" aria-label="Alpaca symbol" title="Alpaca symbol (stocks: SPY, crypto: BTC/USD)">
+    <button id="loadAlpaca" class="btn ghost sm" hidden>Load</button>
+  </div>
+
+  <div class="tb-group">
+    <span class="lbl">Set</span>
+    <div class="seg" id="setSeg"></div>
+  </div>
+
+  <div class="tb-group">
+    <span class="lbl">Strategy</span>
+    <select id="stratSel" class="inp"></select>
+  </div>
+
+  <div class="tb-group transport">
+    <button id="bStart" class="btn icon" title="Start" aria-label="Start">⏮</button>
+    <button id="bBack" class="btn icon" title="Step back" aria-label="Step back">◀</button>
+    <button id="bPlay" class="btn icon play" title="Play / pause (space)" aria-label="Play">▶</button>
+    <button id="bFwd" class="btn icon" title="Step forward" aria-label="Step forward">▶|</button>
+    <select id="speed" class="inp sm" aria-label="Speed">
+      <option value="2">2 fps</option><option value="5" selected>5 fps</option><option value="10">10 fps</option><option value="20">20 fps</option>
+    </select>
+  </div>
+  <div class="tb-group grow">
+    <input id="scrub" type="range" min="0" max="100" value="0" aria-label="Replay position">
+    <span id="stepLbl" class="mono muted">0/0</span>
+  </div>
+  <div class="tb-group">
+    <span id="llmBadge" class="badge">offline</span>
+    <span id="memBadge" class="badge student">0 lessons</span>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- LEFT: conditions -->
+  <aside class="col left">
+    <section class="card">
+      <h2>Market conditions</h2>
+      <label class="fld">Story
+        <select id="story" class="inp"></select>
+      </label>
+      <p id="storyHelp" class="help"></p>
+      <div id="condSliders"></div>
+      <div class="row gap">
+        <button id="regen" class="btn sm">New seed</button>
+        <span class="muted small">Moving a slider rebuilds the market and replays it.</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Finish line</h2>
+      <div class="two">
+        <label class="fld">Daily target (R)<input id="fTarget" class="inp" type="number" step="0.5" value="3"></label>
+        <label class="fld">Daily risk (R)<input id="fRisk" class="inp" type="number" step="0.5" value="2"></label>
+        <label class="fld">Risk used (R)<input id="fUsed" class="inp" type="number" step="0.5" value="0"></label>
+        <label class="fld">PnL today (R)<input id="fPnl" class="inp" type="number" step="0.5" value="0"></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between"><h2>Predicate lab</h2>
+        <label class="switch"><input type="checkbox" id="labOn"><span></span></label></div>
+      <p class="help">Override relations directly to test the chain. These states may not come from a real price history.</p>
+      <div id="labFields" class="lab-fields"></div>
+    </section>
+  </aside>
+
+  <!-- CENTER: chart + mind map -->
+  <section class="col center">
+    <section class="card chart-card">
+      <div class="row between">
+        <h2 id="chartTitle">Anchor</h2>
+        <div class="legend">
+          <span><i class="dot long"></i>fire buy</span><span><i class="dot short"></i>fire sell</span>
+          <span><i class="dot load"></i>loaded wait</span><span><i class="dot kill"></i>kill</span>
+        </div>
+      </div>
+      <canvas id="chart" height="300"></canvas>
+      <canvas id="osc" height="110"></canvas>
+    </section>
+
+    <section class="card mind-card">
+      <div class="row between">
+        <h2>Mind map <span class="muted small">sensors → roles → relations → decision chain</span></h2>
+        <div class="legend">
+          <span><i class="bar"></i>doctrine influence (measured by masking)</span>
+          <span><i class="halo"></i>student attention</span>
+        </div>
+      </div>
+      <svg id="mind" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Role graph"></svg>
+    </section>
+  </section>
+
+  <!-- RIGHT: decision chain + sets -->
+  <aside class="col right">
+    <section class="card">
+      <div class="row between">
+        <h2>Decision chain</h2>
+        <div class="seg sm" id="studentSeg">
+          <button data-s="candidate" class="on">Candidate</button>
+          <button data-s="approved">Approved</button>
+          <button data-s="llm">LLM</button>
+        </div>
+      </div>
+      <table class="chain" id="chain">
+        <thead><tr><th>Step</th><th>Doctrine teacher</th><th id="studentHead">Student</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="agree" class="agree"></div>
+      <div class="row gap wrap">
+        <button id="bConfirm" class="btn sm">Confirm doctrine → lesson</button>
+        <button id="bCorrect" class="btn sm primary">Correct the student…</button>
+        <button id="bAsk" class="btn sm student">Ask LLM</button>
+        <button id="bProbe" class="btn sm ghost" title="Mask each sensor and re-ask: measured attention">Probe</button>
+      </div>
+      <form id="corrForm" class="corr" hidden>
+        <div class="two">
+          <label class="fld">Tide<select name="tide" class="inp"></select></label>
+          <label class="fld">Topology<select name="topology" class="inp"></select></label>
+          <label class="fld">Act<select name="act" class="inp"></select></label>
+          <label class="fld">Wait subtype<select name="wait_subtype" class="inp"></select></label>
+        </div>
+        <label class="fld">Why (your words)<input name="note" class="inp" placeholder="e.g. pullback inside trend, inertia intact"></label>
+        <div class="row gap"><button class="btn sm primary" type="submit">Save lesson</button><button class="btn sm ghost" type="button" id="corrCancel">Cancel</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Student thinking</h2>
+      <ol id="thinking" class="thinking"></ol>
+    </section>
+
+    <section class="card">
+      <div class="row between"><h2>Official sets</h2><span id="consensus" class="badge"></span></div>
+      <table class="sets" id="sets"><thead><tr><th>Set</th><th>Stack</th><th>Tide</th><th>Topology</th><th>Doctrine</th><th>Student</th></tr></thead><tbody></tbody></table>
+    </section>
+  </aside>
+
+  <!-- BOTTOM -->
+  <section class="card chat-card">
+    <div class="row between"><h2>Talk to Fable</h2><span id="chatMode" class="muted small"></span></div>
+    <div id="chatLog" class="chat-log" aria-live="polite"></div>
+    <form id="chatForm" class="chat-form">
+      <textarea id="chatIn" class="inp" rows="2" placeholder="Ask why it thinks this, correct it, or: add strategy NAME: CCI 100 on supports as force, CCI 30 on anchor as velocity, CCI 100 on anchor as inertia"></textarea>
+      <button class="btn primary">Send</button>
+    </form>
+  </section>
+
+  <section class="card lib-card">
+    <div class="row between"><h2>Strategy library</h2>
+      <div class="row gap"><button id="bNewJson" class="btn sm ghost">New (JSON)</button></div></div>
+    <ul id="stratList" class="strat-list"></ul>
+    <div id="specBox" class="spec-box" hidden>
+      <textarea id="specText" class="inp mono" rows="12" spellcheck="false"></textarea>
+      <div id="specVal" class="val"></div>
+      <div class="row gap"><button id="bValidate" class="btn sm">Validate</button><button id="bSaveSpec" class="btn sm primary">Save version</button>
+        <button id="bSaveAct" class="btn sm">Save &amp; activate</button><button id="bCloseSpec" class="btn sm ghost">Close</button></div>
+    </div>
+  </section>
+
+  <section class="card evo-card">
+    <div class="row between"><h2>Evolution</h2><span id="jobLbl" class="muted small"></span></div>
+    <div class="row gap wrap">
+      <button id="bTeach" class="btn sm primary">Auto-teach +4</button>
+      <button id="bCp" class="btn sm">Checkpoint</button>
+      <button id="bCpLlm" class="btn sm student">LLM checkpoint</button>
+      <button id="bReset" class="btn sm ghost">Reset candidate</button>
+    </div>
+    <div class="progress"><span id="prog"></span></div>
+    <canvas id="evoChart" height="150"></canvas>
+    <div id="gates" class="gates"></div>
+    <h3>Principles absorbed</h3>
+    <div id="principles" class="chips"></div>
+    <h3>Lessons <span id="lessonCount" class="muted small"></span></h3>
+    <ul id="lessonList" class="lesson-list"></ul>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>
